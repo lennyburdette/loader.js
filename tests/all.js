@@ -59,6 +59,7 @@ test('has api', function() {
   strictEqual(define.amd, undefined);
   equal(typeof requirejs, 'function');
   equal(typeof requireModule, 'function');
+  equal(typeof require.deprecationLogger, 'function');
 });
 
 test('no conflict mode', function() {
@@ -640,6 +641,11 @@ test('if factory returns a value it is used as export', function() {
 });
 
 test('if a module has no default property assume the return is the default', function() {
+  var deprecationMessage;
+  require.deprecationLogger = function(message) {
+    deprecationMessage = message;
+  };
+
   define('foo', [], function() {
     return {
       bar: 'bar'
@@ -664,10 +670,17 @@ test('if a module has no default property assume the return is the default', fun
   });
 
   equal(foo.bar, 'bar');
+
+  equal(deprecationMessage, 'The `foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
 });
 
 
 test('if a CJS style module has no default export assume module.exports is the default', function() {
+  var deprecationMessage;
+  require.deprecationLogger = function(message) {
+    deprecationMessage = message;
+  };
+
   define('Foo', ['require', 'exports', 'module'], function(require, exports, module) {
     module.exports = function Foo() {
       this.bar = 'bar';
@@ -692,10 +705,17 @@ test('if a CJS style module has no default export assume module.exports is the d
     resolveRelative: 0,
     pendingQueueLength: 1
   });
+
+  equal(deprecationMessage, 'The `Foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
 });
 
 
 test('if a module has no default property assume its export is default (function)', function() {
+  var deprecationMessage;
+  require.deprecationLogger = function(message) {
+    deprecationMessage = message;
+  };
+
   var theFunction = function theFunction() {};
   define('foo', ['require', 'exports', 'module'], function() {
     return theFunction;
@@ -718,9 +738,16 @@ test('if a module has no default property assume its export is default (function
     resolveRelative: 0,
     pendingQueueLength: 1
   });
+
+  equal(deprecationMessage, 'The `foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
 });
 
 test('if a module has no default property assume its export is default (object)', function() {
+  var deprecationMessage;
+  require.deprecationLogger = function(message) {
+    deprecationMessage = message;
+  };
+
   var theObject = {};
   define('foo', ['require', 'exports', 'module'], function() {
     return theObject;
@@ -743,9 +770,16 @@ test('if a module has no default property assume its export is default (object)'
     resolveRelative: 0,
     pendingQueueLength: 1
   });
+
+  equal(deprecationMessage, 'The `foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
 });
 
 test('does not add default if export is frozen', function() {
+  var deprecationMessage;
+  require.deprecationLogger = function(message) {
+    deprecationMessage = message;
+  };
+
   var theObject = Object.freeze({});
   define('foo', ['require', 'exports', 'module'], function() {
     return theObject;
@@ -768,9 +802,16 @@ test('does not add default if export is frozen', function() {
     resolveRelative: 0,
     pendingQueueLength: 1
   });
+
+  equal(deprecationMessage, undefined);
 });
 
 test('does not add default if export is sealed', function() {
+  var deprecationMessage;
+  require.deprecationLogger = function(message) {
+    deprecationMessage = message;
+  };
+
   var theObject = Object.seal({ derp: {} });
   define('foo', ['require', 'exports', 'module'], function() {
     return theObject;
@@ -793,6 +834,8 @@ test('does not add default if export is sealed', function() {
     resolveRelative: 0,
     pendingQueueLength: 1
   });
+
+  equal(deprecationMessage, undefined);
 });
 
 test('has good error message for missing module', function() {
