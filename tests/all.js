@@ -640,19 +640,14 @@ test('if factory returns a value it is used as export', function() {
   equal(foo.bar, 'bar');
 });
 
-test('if a module has no default property assume the return is the default', function() {
-  var deprecationMessage;
-  require.deprecationLogger = function(message) {
-    deprecationMessage = message;
-  };
-
+test('if a module has no default property it does not create one', function() {
   define('foo', [], function() {
     return {
       bar: 'bar'
     };
   });
 
-  var foo = require('foo')['default'];
+  var foo = require('foo');
 
   var stats = statsForMonitor('loaderjs', tree);
 
@@ -669,117 +664,12 @@ test('if a module has no default property assume the return is the default', fun
     pendingQueueLength: 1
   });
 
+  strictEqual(foo.default, undefined);
   equal(foo.bar, 'bar');
-
-  equal(deprecationMessage, 'The `foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
 });
 
-
-test('if a CJS style module has no default export assume module.exports is the default', function() {
-  var deprecationMessage;
-  require.deprecationLogger = function(message) {
-    deprecationMessage = message;
-  };
-
-  define('Foo', ['require', 'exports', 'module'], function(require, exports, module) {
-    module.exports = function Foo() {
-      this.bar = 'bar';
-    };
-  });
-
-  var Foo = require('Foo')['default'];
-  var foo = new Foo();
-
-  equal(foo.bar, 'bar');
-  var stats = statsForMonitor('loaderjs', tree);
-
-  deepEqual(stats, {
-    findDeps: 1,
-    define: 1,
-    exports: 1,
-    findModule: 1,
-    modules: 1,
-    reify: 1,
-    require: 1,
-    resolve: 0,
-    resolveRelative: 0,
-    pendingQueueLength: 1
-  });
-
-  equal(deprecationMessage, 'The `Foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
-});
-
-
-test('if a module has no default property assume its export is default (function)', function() {
-  var deprecationMessage;
-  require.deprecationLogger = function(message) {
-    deprecationMessage = message;
-  };
-
-  var theFunction = function theFunction() {};
-  define('foo', ['require', 'exports', 'module'], function() {
-    return theFunction;
-  });
-
-  equal(require('foo')['default'], theFunction);
-  equal(require('foo'), theFunction);
-
-  var stats = statsForMonitor('loaderjs', tree);
-
-  deepEqual(stats, {
-    findDeps: 1,
-    define: 1,
-    exports: 1,
-    findModule: 2,
-    modules: 1,
-    reify: 1,
-    require: 2,
-    resolve: 0,
-    resolveRelative: 0,
-    pendingQueueLength: 1
-  });
-
-  equal(deprecationMessage, 'The `foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
-});
-
-test('if a module has no default property assume its export is default (object)', function() {
-  var deprecationMessage;
-  require.deprecationLogger = function(message) {
-    deprecationMessage = message;
-  };
-
-  var theObject = {};
-  define('foo', ['require', 'exports', 'module'], function() {
-    return theObject;
-  });
-
-  equal(require('foo')['default'], theObject);
-  equal(require('foo'), theObject);
-
-  var stats = statsForMonitor('loaderjs', tree);
-
-  deepEqual(stats, {
-    findDeps: 1,
-    define: 1,
-    exports: 1,
-    findModule: 2,
-    modules: 1,
-    reify: 1,
-    require: 2,
-    resolve: 0,
-    resolveRelative: 0,
-    pendingQueueLength: 1
-  });
-
-  equal(deprecationMessage, 'The `foo` module does not define a default export, but loader.js generated one anyway. This behavior is deprecated and will be removed in v5.0.0.');
-});
 
 test('does not add default if export is frozen', function() {
-  var deprecationMessage;
-  require.deprecationLogger = function(message) {
-    deprecationMessage = message;
-  };
-
   var theObject = Object.freeze({});
   define('foo', ['require', 'exports', 'module'], function() {
     return theObject;
@@ -802,16 +692,9 @@ test('does not add default if export is frozen', function() {
     resolveRelative: 0,
     pendingQueueLength: 1
   });
-
-  equal(deprecationMessage, undefined);
 });
 
 test('does not add default if export is sealed', function() {
-  var deprecationMessage;
-  require.deprecationLogger = function(message) {
-    deprecationMessage = message;
-  };
-
   var theObject = Object.seal({ derp: {} });
   define('foo', ['require', 'exports', 'module'], function() {
     return theObject;
@@ -834,8 +717,6 @@ test('does not add default if export is sealed', function() {
     resolveRelative: 0,
     pendingQueueLength: 1
   });
-
-  equal(deprecationMessage, undefined);
 });
 
 test('has good error message for missing module', function() {
