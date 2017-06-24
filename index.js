@@ -10,13 +10,23 @@ module.exports = {
     this.treePaths['vendor'] = 'dist';
   },
 
-  included: function() {
+  included: function(app, parentAddon) {
+    var isDevelopmentOrTest = app.env === 'development' || app.env === 'test';
+    var target = parentAddon || app;
+
+    target.options = target.options || {};
+    target.options.loader = target.options.loader || { debug: isDevelopmentOrTest };
+
     if (false /* hotfix */&& shouldUseInstrumentedBuild()) {
-      this.app.import('vendor/loader/loader.instrument.js', {
+      app.import('vendor/loader/loader.instrument.js', {
         prepend: true
-      })
+      });
+    } else if (target.options.loader.debug) {
+      app.import('vendor/loader/loader.debug.js', {
+        prepend: true
+      });
     } else {
-      this.app.import('vendor/loader/loader.js', {
+      app.import('vendor/loader/loader.js', {
         prepend: true
       });
     }
